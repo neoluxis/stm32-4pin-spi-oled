@@ -1,7 +1,7 @@
 /**
  * @file    oled.h
  * @brief   OLED驱动头文件
- * @details 12864驱动, 使用四角SPI接口，主控芯片SSD1315
+ * @details 12864驱动, 使用四角SPI接口, 主控芯片SSD1315
  * @author Neolux Lee
  * @date 2024-03-20
  */
@@ -25,8 +25,8 @@ extern uint8_t OLED_GRAM[8][128];
  * 默认字体设置和字体宽高
  */
 #define DEFAULT_ASCII_FONT FONT_ASCII_8x16
-#define ASCII_CW           (sizeof(DEFAULT_ASCII_FONT[0]) / 2)
-#define ASCII_CH           (sizeof(DEFAULT_ASCII_FONT[0]) / 8)
+#define ASCII_CW           8
+#define ASCII_CH           2
 
 #define DEFAULT_CN_FONT    FONT_CN_16x16
 #define CN_CW              (sizeof(DEFAULT_CN_FONT[0]) / 2)
@@ -83,15 +83,13 @@ extern void OLED_PushGRAM(void);
  */
 extern void OLED_Dot(uint8_t x, uint8_t y, uint8_t inverse);
 
-
 /**
  * @brief  在OLED上显示一个点
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
  * @param  inverse: 是否反色 0:正常 1:反色
-*/
+ */
 extern void OLED_DrawDot(uint8_t x, uint8_t y, uint8_t inverse);
-
 
 /**
  * @brief  在OLED上显示一个线
@@ -150,6 +148,17 @@ extern void OLED_ShowString(char *string, uint8_t x, uint8_t y,
                             uint8_t inverse, uint8_t override);
 
 /**
+ * @brief  在OLED上显示数字
+ * @param  num: 要显示的数字
+ * @param  x: x坐标, 0-127
+ * @param  y: y坐标, 0-63
+ * @param  inverse: 是否反色 0:正常 1:反色
+ * @param  override: 是否覆盖 0:不覆盖 1:覆盖
+ */
+extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y,
+                            uint8_t inverse, uint8_t override);
+
+/**
  * @brief  在OLED上显示中文字符
  * @param  C: 要显示的字符在字库中的位置
  * @param  x: x坐标, 0-127
@@ -158,6 +167,6 @@ extern void OLED_ShowString(char *string, uint8_t x, uint8_t y,
  * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
 extern void OLED_ShowCNChar(uint8_t C, uint8_t x, uint8_t y,
-                        uint8_t inverse, uint8_t override);
+                            uint8_t inverse, uint8_t override);
 
 #endif
