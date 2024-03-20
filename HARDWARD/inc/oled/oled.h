@@ -29,8 +29,8 @@ extern uint8_t OLED_GRAM[8][128];
 #define ASCII_CH           2
 
 #define DEFAULT_CN_FONT    FONT_CN_16x16
-#define CN_CW              (sizeof(DEFAULT_CN_FONT[0]) / 2)
-#define CN_CH              (sizeof(DEFAULT_CN_FONT[0]) / 8)
+#define CN_CW              16
+#define CN_CH              2
 
 /**
  * @brief  OLED初始化
@@ -159,14 +159,24 @@ extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y,
                             uint8_t inverse, uint8_t override);
 
 /**
+ * @brief  在OLED上显示两色位图
+ * @param  bmp: 位图数据
+ * @param  x: x坐标, 0-127
+ * @param  y: y坐标, 0-63
+ * @param  w: 位图宽度
+ * @param  h: 位图高度
+ */
+extern void OLED_ShowBMP(uint8_t *bmp, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+
+/**
  * @brief  在OLED上显示中文字符
- * @param  C: 要显示的字符在字库中的位置
+ * @param  Cidx: 要显示的字符在字库中的位置
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
  * @param  inverse: 是否反色 0:正常 1:反色
  * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
-extern void OLED_ShowCNChar(uint8_t C, uint8_t x, uint8_t y,
+extern void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y,
                             uint8_t inverse, uint8_t override);
 
 #endif

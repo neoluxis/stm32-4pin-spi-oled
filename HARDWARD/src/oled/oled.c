@@ -7,8 +7,9 @@
  */
 
 #include "oled/oled.h"
-#include "oled/font.h"
 #include "stm32f10x.h"
+#include "oled/font.h"
+#include "oled/bmp.h"
 
 uint8_t OLED_GRAM[8][128] = {0};
 
@@ -352,8 +353,25 @@ void OLED_ShowString(char *string, uint8_t x, uint8_t y,
                      uint8_t inverse, uint8_t override)
 {
   while (*string) {
+    if (*string == '\n') {
+      y = y + ASCII_CH * 8;
+      string++;
+      continue;
+    } else if (*string == '\r') {
+      x = 0;
+      string++;
+      continue;
+    }
     OLED_ShowChar(*string, x, y, inverse, override);
-    x += ASCII_CW;
+    x = x + ASCII_CW;
+    if (x > 127 - ASCII_CW) {
+      x = 0;
+      y = y + ASCII_CH * 8;
+    }
+    if (y > 63) {
+      OLED_Clear(inverse);
+      y = 0;
+    }
     string++;
   }
 }
@@ -361,75 +379,42 @@ void OLED_ShowString(char *string, uint8_t x, uint8_t y,
 void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y,
                      uint8_t inverse, uint8_t override)
 {
-  char str[11];
+  char str[15];
   sprintf(str, "%d", num);
   OLED_ShowString(str, x, y, inverse, override);
 }
 
-void OLED_ShowCNChar(uint8_t C, uint8_t x, uint8_t y,
-                     uint8_t inverse, uint8_t override)
+void OLED_ShowBMP(uint8_t *bmp, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+  // TODO: 位图显示
+}
+
+void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y,
+                      uint8_t inverse, uint8_t override)
 {
   uint8_t i, j;
-  if (x > 127 || y > 63) {
+  if (x > 127 - CN_CW || y > 63 - CN_CH * 8) {
     return;
   }
   if (!(y % 8)) {
     for (i = 0; i < CN_CW; i++) {
       if (inverse) {
         if (override) {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] =
-                ~DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
         } else {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] |=
-                ~DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
-        }
-      } else {
-        if (override) {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] = DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
-        } else {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] |= DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
-        }
-      }
-      x++;
-    }
-  } else {
-    for (i = 0; i < CN_CW; i++) {
-      if (inverse) {
-        if (override) {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] =
-                ~DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
-        } else {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] |=
-                ~DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
         }
       } else {
         if (override) {
           for (j = 0; j < CN_CH; j++) {
             OLED_GRAM[y / 8 + j][x] =
-                DEFAULT_CN_FONT[C][i + j * CN_CW];
+                DEFAULT_CN_FONT[Cidx][i + j * CN_CW];
           }
         } else {
-          for (j = 0; j < CN_CH; j++) {
-            OLED_GRAM[y / 8 + j][x] |=
-                DEFAULT_CN_FONT[C][i + j * CN_CW];
-          }
         }
       }
       x++;
     }
   }
+  OLED_PushGRAM();
 }
 
 void OLED_Init(void)
