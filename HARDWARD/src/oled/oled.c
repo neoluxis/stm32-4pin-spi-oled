@@ -10,6 +10,7 @@
 #include "stm32f10x.h"
 #include "oled/font.h"
 #include "oled/bmp.h"
+#include "stdlib.h"
 
 uint8_t OLED_GRAM[8][128] = {0};
 
@@ -229,57 +230,47 @@ void OLED_DrawCircle(uint8_t x, uint8_t y, uint8_t r,
 void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y)
 {
   uint8_t i, j;
-  if (x > 127 || y > 63) {
+  if (x > 127 - ASCII_CW || y > 63) {
     return;
   }
-  if (!(y % 8)) {
-    for (i = 0; i < ASCII_CW; i++) {
-      for (j = 0; j < ASCII_CH; j++) {
-        OLED_GRAM[y / 8 + j][x] =
-            DEFAULT_ASCII_FONT[C - ' '][i + j * ASCII_CW];
-      }
-      x++;
-    }
-  } else {
-    // 截取字体窗口
-    uint8_t new_font[ASCII_CH + 1][ASCII_CW] = {0};
-    // 最上面要被刷新的行数
-    uint8_t topshow = 8 - (y % 8);
-    // 最下面要被刷新的行数
-    uint8_t bottomshow = y % 8;
+  // 截取字体窗口
+  uint8_t font_window[ASCII_CH + 1][ASCII_CW] = {0};
+  // 最上面要被刷新的行数
+  uint8_t topshow = 8 - (y % 8);
+  // 最下面要被刷新的行数
+  uint8_t bottomshow = y % 8;
 
-    // 首先写好新的字体窗口, 然后一起更新到GRAM, 最后刷新到屏幕
-    for (i = 0; i < ASCII_CW; i++) {
-      // 保存最上字节原来的数据
-      new_font[0][i] = OLED_GRAM[y / 8][x + i];
-      // 清除最上字节的数据
-      new_font[0][i] &= (0xff >> topshow);
-      // 添加新的数据
-      new_font[0][i] |=
-          (DEFAULT_ASCII_FONT[C - ' '][i] << bottomshow);
-      OLED_GRAM[y / 8][x + i] = new_font[0][i];
-      for (j = 1; j < ASCII_CH; j++) {
-        // 生成并保存中间字节原来的数据
-        new_font[j][i] =
-            ((DEFAULT_ASCII_FONT[C - ' ']
-                                [i + (j - 1) * ASCII_CW] >>
-              topshow) | // f8h << 5
-             (DEFAULT_ASCII_FONT[C - ' ']
-                                [i + j * ASCII_CW]
-              << bottomshow));
-        OLED_GRAM[y / 8 + j][x + i] = new_font[j][i];
-      }
-      // 保存最下字节原来的数据
-      new_font[ASCII_CH][i] = OLED_GRAM[y / 8 + ASCII_CH][x + i];
-      // 清除最下字节的数据
-      new_font[ASCII_CH][i] &= (0xff >> bottomshow);
-      // 添加新的数据
-      new_font[ASCII_CH][i] |=
-          (DEFAULT_ASCII_FONT[C - ' ']
-                             [i + (ASCII_CH - 1) * ASCII_CW] >>
-           topshow);
-      OLED_GRAM[y / 8 + ASCII_CH][x + i] = new_font[ASCII_CH][i];
+  // 先写好新的字体窗口, 然后一起更新到GRAM, 最后刷新到屏幕
+  for (i = 0; i < ASCII_CW; i++) {
+    // 保存最上字节原来的数据
+    font_window[0][i] = OLED_GRAM[y / 8][x + i];
+    // 清除最上字节的数据
+    font_window[0][i] &= (0xff >> topshow);
+    // 添加新的数据
+    font_window[0][i] |=
+        (DEFAULT_ASCII_FONT[C - ' '][i] << bottomshow);
+    OLED_GRAM[y / 8][x + i] = font_window[0][i];
+    for (j = 1; j < ASCII_CH; j++) {
+      // 生成并保存中间字节原来的数据
+      font_window[j][i] =
+          ((DEFAULT_ASCII_FONT[C - ' ']
+                              [i + (j - 1) * ASCII_CW] >>
+            topshow) | // f8h << 5
+           (DEFAULT_ASCII_FONT[C - ' ']
+                              [i + j * ASCII_CW]
+            << bottomshow));
+      OLED_GRAM[y / 8 + j][x + i] = font_window[j][i];
     }
+    // 保存最下字节原来的数据
+    font_window[ASCII_CH][i] = OLED_GRAM[y / 8 + ASCII_CH][x + i];
+    // 清除最下字节的数据
+    font_window[ASCII_CH][i] &= (0xff << bottomshow);
+    // 添加新的数据
+    font_window[ASCII_CH][i] |=
+        (DEFAULT_ASCII_FONT[C - ' ']
+                           [i + (ASCII_CH - 1) * ASCII_CW] >>
+         topshow);
+    OLED_GRAM[y / 8 + ASCII_CH][x + i] = font_window[ASCII_CH][i];
   }
   OLED_PushGRAM();
 }
@@ -305,6 +296,8 @@ void OLED_ShowString(char *string, uint8_t x, uint8_t y)
     if (y > 63) {
       OLED_Clear(0);
       y = 0;
+      x = 0;
+      continue;
     }
     string++;
   }
@@ -317,9 +310,44 @@ void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y)
   OLED_ShowString(str, x, y);
 }
 
-void OLED_ShowBMP(uint8_t *bmp, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+void OLED_ShowBMP(const uint8_t bmp[], uint8_t x, uint8_t y,
+                  uint8_t w, uint8_t h)
 {
-  // TODO: 位图显示
+  uint8_t hRemain = h % 8;
+  uint8_t hByte   = h / 8 + (hRemain ? 1 : 0);
+  uint8_t i, j;
+  if (x > 127 - w || y > 63 - h) {
+    return;
+  }
+  // 截取BMP窗口
+  uint8_t **bmp_window = (uint8_t **)malloc((hByte + 1) * sizeof(uint8_t *));
+  for (i = 0; i < hByte + 1; i++) {
+    bmp_window[i] = (uint8_t *)malloc(w * sizeof(uint8_t));
+    for (j = 0; j < w; j++) {
+      bmp_window[i][j] = 0;
+    }
+  }
+
+  // 最上面要被刷新的行数
+  uint8_t topshow = 8 - (y % 8);
+  // 最下面要被刷新的行数
+  uint8_t bottomshow = y % 8;
+  // 先写好新的BMP窗口, 然后一起更新到GRAM, 最后刷新到屏幕
+  for (j = 0; j < w; j++) {
+    bmp_window[0][j] = OLED_GRAM[y / 8][x + j];
+    bmp_window[0][j] &= (0xff >> topshow);
+    bmp_window[0][j] |= (bmp[j] << bottomshow);
+    OLED_GRAM[y / 8][x + j] = bmp_window[0][j];
+    for (i = 1; i < hByte; i++) {
+      bmp_window[i][j]            = ((bmp[j + i * w] >> topshow) | (bmp[j + (i - 1) * w] << bottomshow));
+      OLED_GRAM[y / 8 + i][x + j] = bmp_window[i][j];
+    }
+    bmp_window[hByte][j] = OLED_GRAM[y / 8 + hByte][x + j];
+    bmp_window[hByte][j] &= (0xff << (bottomshow + hRemain));
+    bmp_window[hByte][j] |= (bmp[j + (hByte - 1) * w] >> topshow);
+    OLED_GRAM[y / 8 + hByte][x + j] = bmp_window[hByte][j];
+  }
+  OLED_PushGRAM();
 }
 
 void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y)
@@ -328,14 +356,41 @@ void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y)
   if (x > 127 - CN_CW || y > 63 - CN_CH * 8) {
     return;
   }
-  if (!(y % 8)) {
-    for (i = 0; i < CN_CW; i++) {
-      for (j = 0; j < CN_CH; j++) {
-        OLED_GRAM[y / 8 + j][x] =
-            DEFAULT_CN_FONT[Cidx][i + j * CN_CW];
-      }
-      x++;
+  // 截取字体窗口
+  uint8_t font_window[CN_CH + 1][CN_CW] = {0};
+  // 最上面要被刷新的行数
+  uint8_t topshow = 8 - (y % 8);
+  // 最下面要被刷新的行数
+  uint8_t bottomshow = y % 8;
+
+  // 先写好新的字体窗口, 然后一起更新到GRAM, 最后刷新到屏幕
+  for (i = 0; i < CN_CW; i++) {
+    // 保存最上字节原来的数据
+    font_window[0][i] = OLED_GRAM[y / 8][x + i];
+    // 清除最上字节的数据
+    font_window[0][i] &= (0xff >> topshow);
+    // 添加新的数据
+    font_window[0][i] |=
+        (DEFAULT_CN_FONT[Cidx][i] << bottomshow);
+    OLED_GRAM[y / 8][x + i] = font_window[0][i];
+    for (j = 1; j < CN_CH; j++) {
+      // 生成并保存中间字节原来的数据
+      font_window[j][i] =
+          ((DEFAULT_CN_FONT[Cidx][i + (j - 1) * CN_CW] >>
+            topshow) | // f8h << 5
+           (DEFAULT_CN_FONT[Cidx][i + j * CN_CW]
+            << bottomshow));
+      OLED_GRAM[y / 8 + j][x + i] = font_window[j][i];
     }
+    // 保存最下字节原来的数据
+    font_window[CN_CH][i] = OLED_GRAM[y / 8 + CN_CH][x + i];
+    // 清除最下字节的数据
+    font_window[CN_CH][i] &= (0xff << bottomshow);
+    // 添加新的数据
+    font_window[CN_CH][i] |=
+        (DEFAULT_CN_FONT[Cidx][i + (CN_CH - 1) * CN_CW] >>
+         topshow);
+    OLED_GRAM[y / 8 + CN_CH][x + i] = font_window[CN_CH][i];
   }
   OLED_PushGRAM();
 }

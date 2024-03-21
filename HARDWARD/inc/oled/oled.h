@@ -157,7 +157,7 @@ extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y);
  * @param  w: 位图宽度
  * @param  h: 位图高度
  */
-extern void OLED_ShowBMP(uint8_t *bmp, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+extern void OLED_ShowBMP(const uint8_t bmp[], uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
 /**
  * @brief  在OLED上显示中文字符

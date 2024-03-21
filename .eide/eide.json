@@ -114,7 +114,10 @@
             "name": "oled",
             "files": [
               {
-                "path": "HARDWARD/inc/oled/font.h"
+                "path": "HARDWARD/src/oled/bmp.c"
+              },
+              {
+                "path": "HARDWARD/src/oled/font.c"
               },
               {
                 "path": "HARDWARD/src/oled/oled.c"
