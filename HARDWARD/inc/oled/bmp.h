@@ -5,5 +5,6 @@
 #include "sys.h"
 
 extern const uint8_t bmp1[];
+extern const uint8_t bear[];
 
 #endif

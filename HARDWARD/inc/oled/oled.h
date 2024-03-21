@@ -150,7 +150,7 @@ extern void OLED_ShowString(char *string, uint8_t x, uint8_t y);
 extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y);
 
 /**
- * @brief  在OLED上显示两色位图
+ * @brief  在OLED上显示两色位图, 图片高度必须是8的倍数
  * @param  bmp: 位图数据
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63

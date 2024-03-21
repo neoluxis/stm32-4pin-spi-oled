@@ -313,39 +313,13 @@ void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y)
 void OLED_ShowBMP(const uint8_t bmp[], uint8_t x, uint8_t y,
                   uint8_t w, uint8_t h)
 {
-  uint8_t hRemain = h % 8;
-  uint8_t hByte   = h / 8 + (hRemain ? 1 : 0);
+  uint8_t hByte = h / 8 + (h % 8 ? 1 : 0);
+  uint8_t hY    = y / 8;
   uint8_t i, j;
-  if (x > 127 - w || y > 63 - h) {
-    return;
-  }
-  // 截取BMP窗口
-  uint8_t **bmp_window = (uint8_t **)malloc((hByte + 1) * sizeof(uint8_t *));
-  for (i = 0; i < hByte + 1; i++) {
-    bmp_window[i] = (uint8_t *)malloc(w * sizeof(uint8_t));
+  for (i = 0; i < hByte; i++) {
     for (j = 0; j < w; j++) {
-      bmp_window[i][j] = 0;
+      OLED_GRAM[hY + i][x + j] = bmp[i * w + j];
     }
-  }
-
-  // 最上面要被刷新的行数
-  uint8_t topshow = 8 - (y % 8);
-  // 最下面要被刷新的行数
-  uint8_t bottomshow = y % 8;
-  // 先写好新的BMP窗口, 然后一起更新到GRAM, 最后刷新到屏幕
-  for (j = 0; j < w; j++) {
-    bmp_window[0][j] = OLED_GRAM[y / 8][x + j];
-    bmp_window[0][j] &= (0xff >> topshow);
-    bmp_window[0][j] |= (bmp[j] << bottomshow);
-    OLED_GRAM[y / 8][x + j] = bmp_window[0][j];
-    for (i = 1; i < hByte; i++) {
-      bmp_window[i][j]            = ((bmp[j + i * w] >> topshow) | (bmp[j + (i - 1) * w] << bottomshow));
-      OLED_GRAM[y / 8 + i][x + j] = bmp_window[i][j];
-    }
-    bmp_window[hByte][j] = OLED_GRAM[y / 8 + hByte][x + j];
-    bmp_window[hByte][j] &= (0xff << (bottomshow + hRemain));
-    bmp_window[hByte][j] |= (bmp[j + (hByte - 1) * w] >> topshow);
-    OLED_GRAM[y / 8 + hByte][x + j] = bmp_window[hByte][j];
   }
   OLED_PushGRAM();
 }
