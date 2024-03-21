@@ -130,33 +130,24 @@ extern void OLED_DrawCircle(uint8_t x, uint8_t y, uint8_t r,
  * @param  C: 要显示的字符
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
- * @param  inverse: 是否反色 0:正常 1:反色
- * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
-extern void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y,
-                          uint8_t inverse, uint8_t override);
+extern void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y);
 
 /**
  * @brief  在OLED上显示字符串
  * @param  string: 要显示的字符串
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
- * @param  inverse: 是否反色 0:正常 1:反色
- * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
-extern void OLED_ShowString(char *string, uint8_t x, uint8_t y,
-                            uint8_t inverse, uint8_t override);
+extern void OLED_ShowString(char *string, uint8_t x, uint8_t y);
 
 /**
  * @brief  在OLED上显示数字
  * @param  num: 要显示的数字
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
- * @param  inverse: 是否反色 0:正常 1:反色
- * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
-extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y,
-                            uint8_t inverse, uint8_t override);
+extern void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y);
 
 /**
  * @brief  在OLED上显示两色位图
@@ -173,10 +164,7 @@ extern void OLED_ShowBMP(uint8_t *bmp, uint8_t x, uint8_t y, uint8_t w, uint8_t 
  * @param  Cidx: 要显示的字符在字库中的位置
  * @param  x: x坐标, 0-127
  * @param  y: y坐标, 0-63
- * @param  inverse: 是否反色 0:正常 1:反色
- * @param  override: 是否覆盖 0:不覆盖 1:覆盖
  */
-extern void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y,
-                            uint8_t inverse, uint8_t override);
+extern void OLED_ShowChinese(uint8_t Cidx, uint8_t x, uint8_t y);
 
 #endif
