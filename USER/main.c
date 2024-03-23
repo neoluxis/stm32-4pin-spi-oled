@@ -19,6 +19,6 @@ int main(int argc, char const *argv[])
   OLED_ShowChinese(1, 86, 16);
   OLED_ShowChinese(2, 102, 16);
   while (1) {
-
-  }
+    }
+  return 0;
 }

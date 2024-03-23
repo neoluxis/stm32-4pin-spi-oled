@@ -14,6 +14,8 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "math.h"
+#include "oled/bmp.h"
+#include "oled/font.h"
 
 /**
  * @brief  OLED显示缓存

@@ -227,7 +227,7 @@ void OLED_DrawCircle(uint8_t x, uint8_t y, uint8_t r,
   OLED_PushGRAM();
 }
 
-void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y)
+void _OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y)
 {
   uint8_t i, j;
   if (x > 127 - ASCII_CW || y > 63) {
@@ -272,6 +272,11 @@ void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y)
          topshow);
     OLED_GRAM[y / 8 + ASCII_CH][x + i] = font_window[ASCII_CH][i];
   }
+}
+
+void OLED_ShowChar(uint8_t C, uint8_t x, uint8_t y)
+{
+  _OLED_ShowChar(C, x, y);
   OLED_PushGRAM();
 }
 
@@ -301,6 +306,7 @@ void OLED_ShowString(char *string, uint8_t x, uint8_t y)
     }
     string++;
   }
+  OLED_PushGRAM();
 }
 
 void OLED_ShowNumber(int32_t num, uint8_t x, uint8_t y)
@@ -376,7 +382,7 @@ void OLED_Init(void)
   OLED_WriteCmd(0xAE); // 关闭显示
 
   OLED_WriteCmd(0xD5); // 设置显示时钟分频比/振荡器频率
-  OLED_WriteCmd(0xF0);
+  OLED_WriteCmd(0x80);
 
   OLED_WriteCmd(0xA8); // 设置多路复用率
   OLED_WriteCmd(0x3F);
